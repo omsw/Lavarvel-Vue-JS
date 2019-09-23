@@ -13,6 +13,27 @@ import DashboardComponent from './components/DashboardComponent';
 import ProfileComponent from './components/ProfileComponent';
 import UsersComponent from './components/UsersComponent';
 
+import { Form, HasError, AlertError } from 'vform';
+import moment from 'moment';
+import VueProgressBar from 'vue-progressbar';
+import Swal from 'sweetalert2';
+
+Vue.component(HasError.name, HasError);
+Vue.component(AlertError.name, AlertError);
+
+window.Form = Form;
+window.Swal = Swal;
+
+const toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000
+  });
+
+  window.toast = toast;
+
+
 import VueRouter from 'vue-router';
 Vue.use(VueRouter);
 
@@ -26,6 +47,21 @@ let routes = [
   const router = new VueRouter({
     mode: 'history',
     routes
+  });
+
+
+  Vue.filter('upText',function (text) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  });
+
+  Vue.filter('myDate',function (dt) {
+     return moment(dt).format('MMMM Do YYYY');
+  });
+
+  Vue.use(VueProgressBar, {
+    color: 'rgb(143, 255, 199)',
+    failedColor: 'red',
+    height: '3px'
   });
 
 /**
