@@ -8,7 +8,7 @@
                 <div class="card-tools">
 
 
-                <button class="btn btn-success"  data-toggle="modal" data-target="#modal-default"><i class="fas fa-user-plus"></i> Add New</button>
+                <button class="btn btn-success"  data-toggle="modal" @click="addModel()"><i class="fas fa-user-plus"></i> Add New</button>
 
                 </div>
               </div>
@@ -33,8 +33,8 @@
                       <td >{{user.type | upText}}</td>
                       <td > {{user.created_at | myDate}}</td>
                       <td>
-                        <a class="btn btn-warning"><i class="fas fa-pencil-alt"></i></a>
-                         <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                        <a class="btn btn-warning" @click="editModel(user)"><i class="fas fa-pencil-alt"></i></a>
+                         <a class="btn btn-danger" @click="deleteUser(user.id)"><i class="fas fa-trash"></i></a>
                       </td>
                     </tr>
 
@@ -52,14 +52,14 @@
                     <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                        <h4 class="modal-title">Add New User</h4>
+                        <h4 class="modal-title">{{modelHeading}}</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">×</span>
                         </button>
                         </div>
 
 
-                         <form @submit.prevent="createUser" @keydown="form.onKeydown($event)">
+                         <form @submit.prevent="editMode ? updateUser() :createUser()" @keydown="form.onKeydown($event)">
 
                         <div class="modal-body">
 
@@ -102,7 +102,8 @@
                         </div>
                         <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                        <button :disabled="form.busy" type="submit" class="btn btn-primary">Create</button>
+                        <button :disabled="form.busy" v-show="!editMode" type="submit" class="btn btn-primary" >Create</button>
+                        <button :disabled="form.busy" v-show="editMode" type="submit" class="btn btn-warning" >Update</button>
                         </div>
                      </form>
 
@@ -123,8 +124,11 @@
     export default {
         data(){
             return {
+                editMode: false,
+                modelHeading:'',
                 users : {},
                 form : new Form({
+                    id : '',
                     name: '',
                     email: '',
                     password:'',
@@ -137,25 +141,123 @@
 
         },
         methods:{
+            addModel(){
+               this.modelHeading = "Add New";
+               this.form.reset();
+                $("#modal-default").modal("show");
+            },
+            editModel(user){
+                this.modelHeading = "Edit User";
+                this.editMode = true;
+                this.form.reset();
+                $("#modal-default").modal("show");
+                this.form.fill(user);
+            },
             loadUsers(){
 
                 axios.get('api/user').then(({data}) =>( this.users = data.data));
 
             },
             createUser(){
+
+                this.editMode = false;
                 this.$Progress.start();
-                this.form.post('api/user');
-                this.loadUsers();
-                this.form.reset();
-                this.$Progress.finish();
-                $("#modal-default").modal("hide");
-                toast.fire({
-                type: 'success',
-                title: 'User Created in successfully'
+                this.form.post('api/user')
+                .then(()=>{
+
+                    this.loadUsers();
+                    this.form.reset();
+                    this.$Progress.finish();
+                    $("#modal-default").modal("hide");
+                    toast.fire({
+                    type: 'success',
+                    title: 'User Created successfully'
+                    });
+
+                })
+                .catch(()=>{
+
+                    this.$Progress.finish();
+                    toast.fire({
+                    type: 'error',
+                    title: 'Somthing went wrong!'
+                    });
+
+                })
+
+
+            },
+            updateUser(){
+
+                this.$Progress.start();
+                    this.form.put('/api/user/'+this.form.id).then(()=>{
+                               toast.fire({
+                                type: 'success',
+                                title: 'User updated successfully'
+                                });
+                                $("#modal-default").modal("hide");
+                               this.loadUsers();
+
+                        }).catch(()=>{
+
+                           this.$Progress.fail();
+                           toast.fire({
+                            type: 'error',
+                            title: 'Somthing went wrong!'
+                            });
+
+
+                      });
+
+                    this.$Progress.finish();
+
+
+
+            },
+            deleteUser(id){
+
+                Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+
+                       if (result.value) {
+
+                        this.form.delete('/api/user/'+id).then(()=>{
+                                Swal.fire(
+                                'Deleted!',
+                                'User has been deleted.',
+                                'success'
+                                )
+                               this.loadUsers();
+
+
+                        }).catch(()=>{
+
+                            Swal.fire(
+                                'Failed!',
+                                'Something went worng!',
+                                'error'
+                                )
+
+
+                      });
+
+                }
+
+
+
                 });
 
 
             }
+
+
 
         },
         mounted() {

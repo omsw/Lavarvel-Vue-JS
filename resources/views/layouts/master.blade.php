@@ -8,6 +8,7 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
+
   <title>Laravel Vue</title>
 
   <link rel="stylesheet" href="/css/app.css">
@@ -95,6 +96,17 @@
             </router-link>
 
             </ul>
+          </li>
+
+
+          <li class="nav-item">
+            <router-link to="/developer" class="nav-link">
+              <i class="nav-icon fas fa-cogs"></i>
+              <p>
+               Developer
+
+              </p>
+            </router-link>
           </li>
 
 
